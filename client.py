@@ -35,7 +35,7 @@ def getReading(source):
             payload['value'] = float(readings['1.8.0'][0])
             payload['unit'] = readings['1.8.0'][1]
             payload['time'] = datetime.datetime.now().isoformat()
-            Client.event(device='c98b2c1a-ba68', service='sepl_get', payload=json.dumps(payload))
+            Client.event(device='c98b2c1a-ba68', service='reading', data=json.dumps(payload))
 
 
 if __name__ == '__main__':
