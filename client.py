@@ -29,7 +29,7 @@ def getReading(source):
         if readings:
             payload['value'] = float(readings['1.8.0'][0])
             payload['unit'] = readings['1.8.0'][1]
-            payload['time'] = datetime.datetime.now().isoformat()
+            payload['time'] = datetime.datetime.utcnow().isoformat()
             Client.event(device='c98b2c1a-ba68', service='reading', data=json.dumps(payload))
 
 
