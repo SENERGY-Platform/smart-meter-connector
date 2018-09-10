@@ -1,9 +1,9 @@
 if __name__ == '__main__':
     exit('Please use "client.py"')
 
-import os, configparser
+import os, inspect, configparser
 
-conf_path = os.getcwd()
+conf_path = os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe()))[0])
 conf_file = 'sm.conf'
 
 config = configparser.ConfigParser()
@@ -40,8 +40,8 @@ SEPL_DEVICE_TYPE = config['SEPL']['device_type']
 SEPL_SERVICE = config['SEPL']['device_service']
 
 
-if not SM_ID or not SM_NAME:
+if not (SM_ID and SM_NAME):
     exit('Please provide a smart meter ID and name')
 
-if not SEPL_DEVICE_TYPE or not SEPL_SERVICE:
+if not (SEPL_DEVICE_TYPE and SEPL_SERVICE):
     exit('Please provide a SEPL device type and service')
