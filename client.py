@@ -3,6 +3,7 @@ try:
     from connector_client.modules.device_pool import DevicePool
     from connector_client.client import Client
     from connector_client.device import Device
+    from configuration import SM_ID, SM_NAME, SM_MANUFACTURER, SM_TYPE, SEPL_DEVICE_TYPE, SEPL_SERVICE
     from smart_meter_serial import SmartMeterSerial
     from logger import root_logger
 except ImportError as ex:
@@ -13,9 +14,11 @@ import datetime, json
 logger = root_logger.getChild(__name__)
 
 
-smart_meter = Device('c98b2c1a-ba68', 'iot#40c41048-3910-468f-ae74-7425dde90963', 'Landis+Gyr E350')
-smart_meter.addTag('type', 'Smart Meter')
-smart_meter.addTag('manufacturer', 'Landis+Gyr')
+smart_meter = Device(SM_ID, SEPL_DEVICE_TYPE, SM_NAME)
+if SM_TYPE:
+    smart_meter.addTag('type', SM_TYPE)
+if SM_MANUFACTURER:
+    smart_meter.addTag('manufacturer', SM_MANUFACTURER)
 DevicePool.add(smart_meter)
 
 
@@ -30,7 +33,7 @@ def getReading(source):
             payload['value'] = float(readings['1.8.0'][0])
             payload['unit'] = readings['1.8.0'][1]
             payload['time'] = '{}Z'.format(datetime.datetime.utcnow().isoformat())
-            Client.event(device='c98b2c1a-ba68', service='reading', data=json.dumps(payload))
+            Client.event(device=SM_ID, service=SEPL_SERVICE, data=json.dumps(payload))
 
 
 if __name__ == '__main__':
