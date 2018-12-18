@@ -15,10 +15,10 @@
 """
 
 try:
-    from connector_client.modules.http_lib import Methods as http
-    from connector_client.modules.device_pool import DevicePool
-    from connector_client.client import Client
-    from connector_client.device import Device
+    from connector_lib.modules.http_lib import Methods as http
+    from connector_lib.modules.device_pool import DevicePool
+    from connector_lib.client import Client
+    from connector_lib.device import Device
     from configuration import SM_ID, SM_NAME, SM_MANUFACTURER, SM_TYPE, SEPL_DEVICE_TYPE, SEPL_SERVICE
     from smart_meter_serial import SmartMeterSerial
     from logger import root_logger
@@ -53,5 +53,5 @@ def getReading(source):
 
 
 if __name__ == '__main__':
-    connector_client = Client(device_manager=DevicePool)
+    client_connector = Client(device_manager=DevicePool)
     getReading(sm_serial)
