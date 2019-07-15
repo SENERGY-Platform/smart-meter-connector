@@ -38,7 +38,7 @@ class Reading(cc_lib.types.SensorService):
         if reading:
             return {
                 "value": float(reading['1.8.0'][0]),
-                "uni": reading['1.8.0'][1],
+                "unit": reading['1.8.0'][1],
                 "time": '{}Z'.format(datetime.datetime.utcnow().isoformat())
             }
 
