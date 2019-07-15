@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
 
 from logger import root_logger
+from configuration import config
 import serial
 
 logger = root_logger.getChild(__name__)
@@ -41,7 +42,7 @@ class SmartMeterSerial:
 
     def __init__(self):
         self.serial_con = serial.Serial()
-        self.serial_con.port = '/dev/ttyUSB0'
+        self.serial_con.port = config.SmartMeter.port
         self.serial_con.baudrate = 300
         self.serial_con.parity = serial.PARITY_EVEN
         self.serial_con.stopbits = serial.STOPBITS_ONE

@@ -30,6 +30,7 @@ class SMConf:
         id = None
         name = None
         manufacturer = None
+        port = None
 
     @section
     class Senergy:
