@@ -58,7 +58,7 @@ class GenericSmartMeter(cc_lib.types.Device):
 
     def getService(self, srv_handler: str):
         service = super().getService(srv_handler)
-        return service.task(self, self.source)
+        return service.task(self.source)
 
 
 devices = list()
