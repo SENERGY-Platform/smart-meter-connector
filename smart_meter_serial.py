@@ -17,10 +17,8 @@
 if __name__ == '__main__':
     exit('Please use "client.py"')
 
-try:
-    from logger import root_logger
-except ImportError as ex:
-    exit("{} - {}".format(__name__, ex.msg))
+
+from logger import root_logger
 import serial
 
 logger = root_logger.getChild(__name__)
