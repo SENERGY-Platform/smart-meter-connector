@@ -15,7 +15,7 @@
 """
 
 
-from .configuration import config
+from configuration import config
 import logging, cc_lib
 
 
