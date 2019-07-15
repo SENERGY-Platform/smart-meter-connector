@@ -14,44 +14,101 @@
    limitations under the License.
 """
 
-try:
-    from connector_lib.modules.http_lib import Methods as http
-    from connector_lib.modules.device_pool import DevicePool
-    from connector_lib.client import Client
-    from connector_lib.device import Device
-    from configuration import SM_ID, SM_NAME, SM_MANUFACTURER, SM_TYPE, SEPL_DEVICE_TYPE, SEPL_SERVICE
-    from smart_meter_serial import SmartMeterSerial
-    from logger import root_logger
-except ImportError as ex:
-    exit("{} - {}".format(__name__, ex.msg))
-import datetime, json
+
+from configuration import config
+from smart_meter_serial import SmartMeterSerial
+from logger import root_logger
+from time import sleep
+import datetime
+import json
+import cc_lib
 
 
 logger = root_logger.getChild(__name__)
 
 
-smart_meter = Device(SM_ID, SEPL_DEVICE_TYPE, SM_NAME)
-if SM_TYPE:
-    smart_meter.addTag('type', SM_TYPE)
-if SM_MANUFACTURER:
-    smart_meter.addTag('manufacturer', SM_MANUFACTURER)
-DevicePool.add(smart_meter)
+class Reading(cc_lib.types.SensorService):
+    uri = config.Senergy.st_sm
+    name = "Push Reading"
+    description = "Push current reading from a smart meter"
+
+    @staticmethod
+    def task(source):
+        reading = source.read()
+        if reading:
+            return {
+                "value": float(reading['1.8.0'][0]),
+                "uni": reading['1.8.0'][1],
+                "time": '{}Z'.format(datetime.datetime.utcnow().isoformat())
+            }
 
 
-sm_serial = SmartMeterSerial()
+class GenericSmartMeter(cc_lib.types.Device):
+    uri = config.Senergy.dt_sm
+    description = "Device type for Smart Meters"
+    services = {
+        "reading": Reading
+    }
+
+    def __init__(self, id: str, name: str, manufacturer: str, source):
+        self.id = id
+        self.name = name
+        self.addTag('manufacturer', manufacturer)
+        self.source = source
+
+    def getService(self, srv_handler: str):
+        service = super().getService(srv_handler)
+        return service.task(self, self.source)
 
 
-def getReading(source):
-    payload = dict()
+devices = list()
+
+devices.append(
+    GenericSmartMeter(config.SmartMeter.id,config.SmartMeter.name,config.SmartMeter.manufacturer,SmartMeterSerial())
+)
+
+
+def on_connect(client: cc_lib.client.Client):
+    try:
+        client.syncHub(devices)
+    except cc_lib.client._exception.HubSyncDeviceError:
+        for device in devices:
+            client.addDevice(device, asynchronous=True)
+        client.syncHub(devices)
+    for device in devices:
+        try:
+            client.connectDevice(device, asynchronous=True)
+        except cc_lib.client.DeviceConnectError:
+            pass
+
+
+connector_client = cc_lib.client.Client()
+connector_client.setConnectClbk(on_connect)
+
+
+def pushReadings():
+    msg = cc_lib.client.message.Message(str())
+    srv = "reading"
     while True:
-        readings = source.read()
-        if readings:
-            payload['value'] = float(readings['1.8.0'][0])
-            payload['unit'] = readings['1.8.0'][1]
-            payload['time'] = '{}Z'.format(datetime.datetime.utcnow().isoformat())
-            Client.event(device=SM_ID, service=SEPL_SERVICE, data=json.dumps(payload))
+        for device in devices:
+            payload = device.getService(srv)
+            if payload:
+                msg.data = json.dumps(payload)
+                envelope = cc_lib.client.message.Envelope(
+                    device,
+                    srv,
+                    msg
+                )
+                connector_client.emmitEvent(envelope, asynchronous=True)
+        sleep(5)
 
 
 if __name__ == '__main__':
-    client_connector = Client(device_manager=DevicePool)
-    getReading(sm_serial)
+    while True:
+        try:
+            connector_client.initHub()
+            break
+        except cc_lib.client.HubInitializationError:
+            sleep(10)
+    connector_client.connect(reconnect=True)
+    pushReadings()
