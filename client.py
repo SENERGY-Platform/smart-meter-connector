@@ -27,7 +27,7 @@ import cc_lib
 logger = root_logger.getChild(__name__)
 
 
-class Reading(cc_lib.types.SensorService):
+class GetMeasurements(cc_lib.types.SensorService):
     uri = config.Senergy.st_sm
     name = "Push Reading"
     description = "Push current reading from a smart meter"
@@ -55,7 +55,7 @@ class GenericSmartMeter(cc_lib.types.Device):
     uri = config.Senergy.dt_sm
     description = "Device type for Smart Meters"
     services = {
-        "reading": Reading
+        "getMeasurements": GetMeasurements
     }
 
     def __init__(self, id: str, name: str, manufacturer: str, source):
@@ -96,7 +96,7 @@ connector_client.setConnectClbk(on_connect)
 
 def pushReadings():
     msg = cc_lib.client.message.Message(str())
-    srv = "reading"
+    srv = "getMeasurements"
     while True:
         for device in devices:
             payload = device.getService(srv)
