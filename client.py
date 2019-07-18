@@ -36,10 +36,18 @@ class Reading(cc_lib.types.SensorService):
     def task(source):
         reading = source.read()
         if reading:
+            timestamp = '{}Z'.format(datetime.datetime.utcnow().isoformat())
             return {
-                "value": float(reading['1.8.0'][0]),
-                "unit": reading['1.8.0'][1],
-                "time": '{}Z'.format(datetime.datetime.utcnow().isoformat())
+                "1_8_0": {
+                    "value": float(reading["1.8.0"][0]),
+                    "unit": reading["1.8.0"][1],
+                    "time": timestamp
+                },
+                "16_7": {
+                    "value": float(reading["16.7"][0]),
+                    "unit": reading["16.7"][1],
+                    "time": timestamp
+                }
             }
 
 
