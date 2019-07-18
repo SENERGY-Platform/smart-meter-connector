@@ -96,5 +96,12 @@ class SmartMeterSerial:
                 else:
                     value = value.replace(')', '')
                     unit = None
+                try:
+                    value = int(value)
+                except ValueError:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        pass
                 readings[key] = (value, unit)
         return readings
