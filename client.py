@@ -37,11 +37,11 @@ class GetMeasurements(cc_lib.types.SensorService):
         reading = source.read()
         if reading:
             return {
-                "1_8_0": {
+                "OBIS_1_8_0": {
                     "value": float(reading["1.8.0"][0]),
                     "unit": reading["1.8.0"][1]
                 },
-                "16_7": {
+                "OBIS_16_7": {
                     "value": float(reading["16.7"][0]),
                     "unit": reading["16.7"][1]
                 },
