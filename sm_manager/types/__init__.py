@@ -14,21 +14,11 @@
    limitations under the License.
 """
 
-__all__ = ('root_logger', )
+from .device import *
+from .service import *
 
 
-from .configuration import config
-import logging, cc_lib
-
-
-logging_levels = {
-    'info': logging.INFO,
-    'warning': logging.WARNING,
-    'error': logging.ERROR,
-    'critical': logging.CRITICAL,
-    'debug': logging.DEBUG
-}
-
-
-root_logger = cc_lib.logger.getLogger("smart-meter")
-root_logger.setLevel(logging_levels.setdefault(config.Logger.level, logging.INFO))
+__all__ = (
+    device.__all__,
+    service.__all__
+)

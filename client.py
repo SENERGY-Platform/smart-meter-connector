@@ -15,11 +15,8 @@
 """
 
 
-from configuration import config
-from smart_meter_serial import SmartMeterSerial
-from logger import root_logger
+from sm_manager import root_logger, DeviceManager, SerialMonitor
 from time import sleep
-import datetime
 import json
 import cc_lib
 
@@ -27,63 +24,15 @@ import cc_lib
 logger = root_logger.getChild(__name__)
 
 
-class GetMeasurements(cc_lib.types.SensorService):
-    uri = config.Senergy.st_sm
-    name = "Push Reading"
-    description = "Push current reading from a smart meter."
-
-    @staticmethod
-    def task(source):
-        reading = source.read()
-        if reading:
-            return {
-                "OBIS_1_8_0": {
-                    "value": float(reading["1.8.0"][0]),
-                    "unit": reading["1.8.0"][1]
-                },
-                "OBIS_16_7": {
-                    "value": float(reading["16.7"][0]),
-                    "unit": reading["16.7"][1]
-                },
-                "time": '{}Z'.format(datetime.datetime.utcnow().isoformat())
-            }
-
-
-class LandisGyrE350(cc_lib.types.Device):
-    uri = config.Senergy.dt_sm
-    description = "Device type for Landis+Gyr E350 Smart Meters."
-    services = {
-        "getMeasurements": GetMeasurements
-    }
-
-    def __init__(self, id: str, name: str, manufacturer: str, source):
-        self.id = id
-        self.name = name
-        self.addTag('manufacturer', manufacturer)
-        self.source = source
-
-    def getService(self, srv_handler: str):
-        service = super().getService(srv_handler)
-        return service.task(self.source)
-
-
-devices = list()
-
-devices.append(
-    LandisGyrE350(config.SmartMeter.id, config.SmartMeter.name, config.SmartMeter.manufacturer, SmartMeterSerial())
-)
+device_manager = DeviceManager()
 
 
 def on_connect(client: cc_lib.client.Client):
-    try:
-        client.syncHub(devices)
-    except cc_lib.client._exception.HubSyncDeviceError:
-        for device in devices:
-            client.addDevice(device, asynchronous=True)
-        client.syncHub(devices)
+    devices = device_manager.devices.values()
     for device in devices:
         try:
-            client.connectDevice(device, asynchronous=True)
+            if device.adapter:
+                client.connectDevice(device, asynchronous=True)
         except cc_lib.client.DeviceConnectError:
             pass
 
@@ -91,22 +40,28 @@ def on_connect(client: cc_lib.client.Client):
 connector_client = cc_lib.client.Client()
 connector_client.setConnectClbk(on_connect)
 
+serial_monitor = SerialMonitor(device_manager, connector_client)
 
 def pushReadings():
     msg = cc_lib.client.message.Message(str())
     srv = "getMeasurements"
+    delay = True
     while True:
-        for device in devices:
-            payload = device.getService(srv)
-            if payload:
-                msg.data = json.dumps(payload)
-                envelope = cc_lib.client.message.Envelope(
-                    device,
-                    srv,
-                    msg
-                )
-                connector_client.emmitEvent(envelope, asynchronous=True)
-        #sleep(5)
+        delay = True
+        for device in device_manager.devices.values():
+            if device.adapter:
+                delay = False
+                payload = device.getService(srv)
+                if payload:
+                    msg.data = json.dumps(payload)
+                    envelope = cc_lib.client.message.Envelope(
+                        device,
+                        srv,
+                        msg
+                    )
+                    connector_client.emmitEvent(envelope, asynchronous=True)
+        if delay:
+            sleep(5)
 
 
 if __name__ == '__main__':
@@ -117,4 +72,5 @@ if __name__ == '__main__':
         except cc_lib.client.HubInitializationError:
             sleep(10)
     connector_client.connect(reconnect=True)
+    serial_monitor.start()
     pushReadings()

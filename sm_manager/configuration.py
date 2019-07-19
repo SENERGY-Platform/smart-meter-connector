@@ -14,8 +14,7 @@
    limitations under the License.
 """
 
-if __name__ == '__main__':
-    exit('Please use "client.py"')
+__all__ = ('config', )
 
 
 from simple_conf import configuration, section

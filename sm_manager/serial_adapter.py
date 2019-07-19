@@ -22,13 +22,14 @@ import serial
 logger = root_logger.getChild(__name__)
 
 
-class SmartMeterSerial:
+class SerialAdapter:
     init_telegram = '\x2f\x3f\x21\x0d\x0a'.encode()     # '/?! CR LF'
     ack_telegram = '\x06\x30\x35\x30\x0d\x0a'.encode()  # 'ACK 050 CR LF'
 
     def __init__(self, port):
+        self.source = port
         self.serial_con = serial.Serial()
-        self.serial_con.port = port
+        self.serial_con.port = self.source
         self.serial_con.parity = serial.PARITY_EVEN
         self.serial_con.stopbits = serial.STOPBITS_ONE
         self.serial_con.bytesize = serial.SEVENBITS
@@ -73,6 +74,7 @@ class SmartMeterSerial:
             return ident_telegram.decode(), data_telegram.decode()
         except Exception as ex:
             logger.error(ex)
+            return None, None
 
     def read(self):
         _, dt = self.__read()
