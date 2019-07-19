@@ -2,3 +2,5 @@ __pycache__
 .venv
 sepl-connector-client
 sm.conf
+devices.sqllite3
+cc-lib
