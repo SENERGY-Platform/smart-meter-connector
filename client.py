@@ -45,12 +45,9 @@ serial_monitor = SerialMonitor(device_manager, connector_client)
 def pushReadings():
     msg = cc_lib.client.message.Message(str())
     srv = "getMeasurements"
-    delay = True
     while True:
-        delay = True
         for device in device_manager.devices.values():
             if device.adapter:
-                delay = False
                 payload = device.getService(srv)
                 if payload:
                     msg.data = json.dumps(payload)
@@ -60,8 +57,7 @@ def pushReadings():
                         msg
                     )
                     connector_client.emmitEvent(envelope, asynchronous=True)
-        if delay:
-            sleep(5)
+        sleep(1)
 
 
 if __name__ == '__main__':
