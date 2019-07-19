@@ -26,11 +26,9 @@ from os import getcwd
 class SMConf:
 
     @section
-    class SmartMeter:
-        id = None
-        name = None
-        manufacturer = None
-        port = None
+    class Serial:
+        base_path = None
+        port_filter = None
 
     @section
     class Senergy:
@@ -45,7 +43,7 @@ class SMConf:
 config = SMConf('sm.conf', getcwd())
 
 
-if not all((config.SmartMeter.id, config.SmartMeter.name, config.SmartMeter.manufacturer)):
+if not all((config.Serial.base_path, )):
     exit('Please provide Smart Meter information')
 
 if not all((config.Senergy.dt_sm, config.Senergy.st_sm)):
