@@ -30,7 +30,7 @@ logger = root_logger.getChild(__name__)
 class GetMeasurements(cc_lib.types.SensorService):
     uri = config.Senergy.st_sm
     name = "Push Reading"
-    description = "Push current reading from a smart meter"
+    description = "Push current reading from a smart meter."
 
     @staticmethod
     def task(source):
@@ -49,9 +49,9 @@ class GetMeasurements(cc_lib.types.SensorService):
             }
 
 
-class GenericSmartMeter(cc_lib.types.Device):
+class LandisGyrE350(cc_lib.types.Device):
     uri = config.Senergy.dt_sm
-    description = "Device type for Smart Meters"
+    description = "Device type for Landis+Gyr E350 Smart Meters."
     services = {
         "getMeasurements": GetMeasurements
     }
@@ -70,7 +70,7 @@ class GenericSmartMeter(cc_lib.types.Device):
 devices = list()
 
 devices.append(
-    GenericSmartMeter(config.SmartMeter.id,config.SmartMeter.name,config.SmartMeter.manufacturer,SmartMeterSerial())
+    LandisGyrE350(config.SmartMeter.id, config.SmartMeter.name, config.SmartMeter.manufacturer, SmartMeterSerial())
 )
 
 
@@ -106,7 +106,7 @@ def pushReadings():
                     msg
                 )
                 connector_client.emmitEvent(envelope, asynchronous=True)
-        sleep(5)
+        #sleep(5)
 
 
 if __name__ == '__main__':
