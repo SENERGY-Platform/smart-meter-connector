@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
 from logger import root_logger
 from configuration import config
+from time import sleep
 import serial
 
 logger = root_logger.getChild(__name__)
@@ -38,12 +39,11 @@ class SmartMeterSerial:
     https://wiki.volkszaehler.org/hardware/channels/meters/power/edl-ehz/e350
     """
     init_telegram = '\x2f\x3f\x21\x0d\x0a'.encode()     # '/?! CR LF'
-    ack_telegram = '\x06\x30\x30\x30\x0d\x0a'.encode()  # 'ACK 000 CR LF'
+    ack_telegram = '\x06\x30\x35\x30\x0d\x0a'.encode()  # 'ACK 000 CR LF'
 
     def __init__(self):
         self.serial_con = serial.Serial()
         self.serial_con.port = config.SmartMeter.port
-        self.serial_con.baudrate = 300
         self.serial_con.parity = serial.PARITY_EVEN
         self.serial_con.stopbits = serial.STOPBITS_ONE
         self.serial_con.bytesize = serial.SEVENBITS
@@ -52,6 +52,8 @@ class SmartMeterSerial:
 
     def read(self):
         try:
+            self.serial_con.baudrate = 300
+
             # open serial port
             self.serial_con.open()
 
@@ -60,7 +62,7 @@ class SmartMeterSerial:
 
             # read identification telegram
             ident_telegram = self.serial_con.readall()
-            if not ident_telegram or not 'LGZ4ZMF100AC.M23' in ident_telegram.decode():
+            if not ident_telegram or not 'LGZ4ZMF100AC' in ident_telegram.decode():
                 logger.error("missing or malformed identification telegram: {}".format(ident_telegram))
                 self.serial_con.close()
                 return None
@@ -68,6 +70,10 @@ class SmartMeterSerial:
 
             # write acknowledgement telegram
             self.serial_con.write(__class__.ack_telegram)
+
+            # change baudrate
+            sleep(0.5)
+            self.serial_con.baudrate = 9600
 
             # read data telegram
             data_telegram = self.serial_con.readall()
