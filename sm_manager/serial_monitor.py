@@ -71,7 +71,7 @@ class SerialMonitor(Thread):
             try:
                 future.result()
                 self.__device_manager.add(device, mfr_id)
-                self.__client.connectDevice(device)
+                self.__client.connectDevice(device, asynchronous=True)
             except (cc_lib.client.DeviceAddError, cc_lib.client.DeviceUpdateError):
                 pass
 
