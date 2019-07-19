@@ -86,6 +86,8 @@ class SerialAdapter:
         if mfr_id and dt:
             mfr_id = mfr_id.replace("\r", "")
             mfr_id = mfr_id.replace("\n", "")
+            mfr_id = mfr_id.replace("!", "")
+            mfr_id = mfr_id.replace("?", "")
             mfr_id = mfr_id.replace("/", "")
             mfr_id = mfr_id.split(".")
             if type(mfr_id) is list:
