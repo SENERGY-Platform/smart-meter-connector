@@ -100,4 +100,4 @@ class SerialMonitor(Thread):
                     self.__client.syncHub(list(self.__device_manager.devices.values()))
                 except cc_lib.client.HubError:
                     pass
-            sleep(5)
+            sleep(30)
