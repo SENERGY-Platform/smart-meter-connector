@@ -11,5 +11,6 @@ COPY . .
 
 RUN mkdir cc-lib
 RUN touch sm.conf
+RUN touch devices.sqllite3
 
 CMD [ "python", "./client.py"]
