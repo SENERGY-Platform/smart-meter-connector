@@ -28,48 +28,48 @@ class SerialAdapter:
 
     def __init__(self, port):
         self.source = port
-        self.serial_con = serial.Serial()
-        self.serial_con.port = self.source
-        self.serial_con.parity = serial.PARITY_EVEN
-        self.serial_con.stopbits = serial.STOPBITS_ONE
-        self.serial_con.bytesize = serial.SEVENBITS
-        self.serial_con.timeout = 1
+        self.__serial_con = serial.Serial()
+        self.__serial_con.port = self.source
+        self.__serial_con.parity = serial.PARITY_EVEN
+        self.__serial_con.stopbits = serial.STOPBITS_ONE
+        self.__serial_con.bytesize = serial.SEVENBITS
+        self.__serial_con.timeout = 1
 
     def __read(self):
         try:
-            self.serial_con.baudrate = 300
+            self.__serial_con.baudrate = 300
 
             # open serial port
-            self.serial_con.open()
+            self.__serial_con.open()
 
             # write initial telegram
-            self.serial_con.write(__class__.init_telegram)
+            self.__serial_con.write(__class__.init_telegram)
 
             # read identification telegram
-            ident_telegram = self.serial_con.readall()
+            ident_telegram = self.__serial_con.readall()
             if not ident_telegram: #or not self.mfr_ident in ident_telegram.decode():
                 logger.error("missing identification telegram: {}".format(ident_telegram))
-                self.serial_con.close()
+                self.__serial_con.close()
                 return None, None
             logger.debug(ident_telegram)
 
             # write acknowledgement telegram
-            self.serial_con.write(__class__.ack_telegram)
+            self.__serial_con.write(__class__.ack_telegram)
 
             # change baudrate
             sleep(0.5)
-            self.serial_con.baudrate = 9600
+            self.__serial_con.baudrate = 9600
 
             # read data telegram
-            data_telegram = self.serial_con.readall()
+            data_telegram = self.__serial_con.readall()
             if not data_telegram or len(data_telegram.decode()) < 20:
                 logger.error("missing or malformed data telegram: {}".format(data_telegram))
-                self.serial_con.close()
+                self.__serial_con.close()
                 return None, None
             logger.debug(data_telegram)
 
             # close serial port
-            self.serial_con.close()
+            self.__serial_con.close()
 
             return ident_telegram.decode(), data_telegram.decode()
         except Exception as ex:
