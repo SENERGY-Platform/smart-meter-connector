@@ -19,9 +19,10 @@ __all__ = ('SerialMonitor', )
 
 from .logger import root_logger
 from .configuration import config
-from .serial_adapter import SerialAdapter
+from .serial_adapter import SerialAdapter, ReadError
 from .types import device_type_map
 from .device_manager import DeviceManager
+from .readings_emitter import ReadingsEmitter
 from threading import Thread
 from time import sleep
 import os, cc_lib
@@ -50,14 +51,17 @@ class SerialMonitor(Thread):
     def __probePorts(self, ports):
         smart_meters = list()
         for port in ports:
-            srl_adptr = SerialAdapter(port)
-            mfr_id, sm_id = srl_adptr.identify()
-            if mfr_id and sm_id:
-                logger.info("found smart meter '{}' with id '{}' on '{}'".format(mfr_id, sm_id, port))
-                smart_meters.append((sm_id, mfr_id, srl_adptr))
+            try:
+                srl_adptr = SerialAdapter(port)
+                mfr_id, sm_id = srl_adptr.identify()
+                if mfr_id and sm_id:
+                    logger.info("found smart meter '{}' with id '{}' on '{}'".format(mfr_id, sm_id, port))
+                    smart_meters.append((sm_id, mfr_id, srl_adptr))
+            except ReadError:
+                pass
         return smart_meters
 
-    def __addAndConnect(self, smart_meters):
+    def __addDevices(self, smart_meters):
         futures = list()
         for sm_id, mfr_id, srl_adptr in smart_meters:
             try:
@@ -71,16 +75,10 @@ class SerialMonitor(Thread):
             try:
                 future.result()
                 self.__device_manager.add(device, mfr_id)
-                self.__client.connectDevice(device, asynchronous=True)
+                emitter = ReadingsEmitter(device, self.__client)
+                emitter.start()
             except (cc_lib.client.DeviceAddError, cc_lib.client.DeviceUpdateError):
                 pass
-
-    def __disconnect(self, ports):
-        devices = [device for device in self.__device_manager.devices.values() if device.adapter and device.adapter.source in ports]
-        for device in devices:
-            logger.info("can't find smart meter with id '{}' on '{}'".format(device.id, device.adapter.source))
-            self.__client.disconnectDevice(device, asynchronous=True)
-            device.adapter = None
 
     def run(self) -> None:
         while True:
@@ -90,14 +88,11 @@ class SerialMonitor(Thread):
             logger.debug("active ports {}".format(active_ports))
             inactive_ports = list(set(ports) - set(active_ports))
             logger.debug("inactive ports {}".format(inactive_ports))
-            missing_ports = list(set(active_ports) - set(ports))
-            logger.debug("missing ports {}".format(missing_ports))
             smart_meters = self.__probePorts(inactive_ports)
-            self.__addAndConnect(smart_meters)
-            self.__disconnect(missing_ports)
+            self.__addDevices(smart_meters)
             if smart_meters:
                 try:
                     self.__client.syncHub(list(self.__device_manager.devices.values()))
                 except cc_lib.client.HubError:
                     pass
-            sleep(30)
+            sleep(10)
