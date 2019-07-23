@@ -22,6 +22,18 @@ import serial
 logger = root_logger.getChild(__name__)
 
 
+class ReadError(Exception):
+    pass
+
+
+class IdentError(ReadError):
+    pass
+
+
+class DataError(ReadError):
+    pass
+
+
 class SerialAdapter:
     init_telegram = '\x2f\x3f\x21\x0d\x0a'.encode()     # '/?! CR LF'
     ack_telegram = '\x06\x30\x35\x30\x0d\x0a'.encode()  # 'ACK 050 CR LF'
@@ -50,7 +62,7 @@ class SerialAdapter:
             if not ident_telegram: #or not self.mfr_ident in ident_telegram.decode():
                 logger.error("missing identification telegram: {}".format(ident_telegram))
                 self.__serial_con.close()
-                return None, None
+                raise IdentError
             logger.debug(ident_telegram)
 
             # write acknowledgement telegram
@@ -65,41 +77,38 @@ class SerialAdapter:
             if not data_telegram or len(data_telegram.decode()) < 20:
                 logger.error("missing or malformed data telegram: {}".format(data_telegram))
                 self.__serial_con.close()
-                return None, None
+                raise DataError
             logger.debug(data_telegram)
 
             # close serial port
             self.__serial_con.close()
 
             return ident_telegram.decode(), data_telegram.decode()
-        except Exception as ex:
+        except IOError as ex:
             logger.error(ex)
-            return None, None
+            raise ReadError
 
     def read(self):
         _, dt = self.__read()
-        if dt:
-            return self.__parseDataTelegram(dt)
+        return self.__parseDataTelegram(dt)
 
     def identify(self):
         mfr_id, dt = self.__read()
-        if mfr_id and dt:
-            mfr_id = mfr_id.replace("\r", "")
-            mfr_id = mfr_id.replace("\n", "")
-            mfr_id = mfr_id.replace("!", "")
-            mfr_id = mfr_id.replace("?", "")
-            mfr_id = mfr_id.replace("/", "")
-            mfr_id = mfr_id.split(".")
-            if type(mfr_id) is list:
-                mfr_id = mfr_id[0]
-            dt = self.__parseDataTelegram(dt)
-            meter_ids = list()
-            for m_id, val in dt.items():
-                if m_id in ("C.1.0", "C.1.1", "0.0") and not str(val[0]).isspace() and not str(val[0]) in meter_ids:
-                    meter_ids.append(str(val[0]))
-            meter_ids.sort()
-            return mfr_id, "".join(meter_ids)
-        return None, None
+        mfr_id = mfr_id.replace("\r", "")
+        mfr_id = mfr_id.replace("\n", "")
+        mfr_id = mfr_id.replace("!", "")
+        mfr_id = mfr_id.replace("?", "")
+        mfr_id = mfr_id.replace("/", "")
+        mfr_id = mfr_id.split(".")
+        if type(mfr_id) is list:
+            mfr_id = mfr_id[0]
+        dt = self.__parseDataTelegram(dt)
+        meter_ids = list()
+        for m_id, val in dt.items():
+            if m_id in ("C.1.0", "C.1.1", "0.0") and not str(val[0]).isspace() and not str(val[0]) in meter_ids:
+                meter_ids.append(str(val[0]))
+        meter_ids.sort()
+        return mfr_id, "".join(meter_ids)
 
     def __parseDataTelegram(self, data):
         readings = dict()
