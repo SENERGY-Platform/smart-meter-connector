@@ -17,7 +17,6 @@
 
 from sm_manager import root_logger, DeviceManager, SerialMonitor
 from time import sleep
-import json
 import cc_lib
 
 
@@ -42,23 +41,6 @@ connector_client.setConnectClbk(on_connect)
 
 serial_monitor = SerialMonitor(device_manager, connector_client)
 
-def pushReadings():
-    msg = cc_lib.client.message.Message(str())
-    srv = "getMeasurements"
-    while True:
-        for device in device_manager.devices.values():
-            if device.adapter:
-                payload = device.getService(srv)
-                if payload:
-                    msg.data = json.dumps(payload)
-                    envelope = cc_lib.client.message.Envelope(
-                        device,
-                        srv,
-                        msg
-                    )
-                    connector_client.emmitEvent(envelope, asynchronous=True)
-        sleep(1)
-
 
 if __name__ == '__main__':
     while True:
@@ -69,4 +51,4 @@ if __name__ == '__main__':
             sleep(10)
     connector_client.connect(reconnect=True)
     serial_monitor.start()
-    pushReadings()
+    serial_monitor.join()
