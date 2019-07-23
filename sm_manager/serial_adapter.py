@@ -15,6 +15,9 @@
 """
 
 
+__all__ = ('SerialAdapter', )
+
+
 from .logger import root_logger
 from time import sleep
 import serial
@@ -59,8 +62,8 @@ class SerialAdapter:
 
             # read identification telegram
             ident_telegram = self.__serial_con.readall()
-            if not ident_telegram: #or not self.mfr_ident in ident_telegram.decode():
-                logger.error("missing identification telegram: {}".format(ident_telegram))
+            if not ident_telegram:
+                logger.error("missing identification telegram on '{}'".format(self.__serial_con.port))
                 self.__serial_con.close()
                 raise IdentError
             logger.debug(ident_telegram)
@@ -75,7 +78,7 @@ class SerialAdapter:
             # read data telegram
             data_telegram = self.__serial_con.readall()
             if not data_telegram or len(data_telegram.decode()) < 20:
-                logger.error("missing or malformed data telegram: {}".format(data_telegram))
+                logger.error("missing or malformed data telegram on '{}'".format(self.__serial_con.port))
                 self.__serial_con.close()
                 raise DataError
             logger.debug(data_telegram)
@@ -104,8 +107,8 @@ class SerialAdapter:
             mfr_id = mfr_id[0]
         dt = self.__parseDataTelegram(dt)
         meter_ids = list()
-        for m_id, val in dt.items():
-            if m_id in ("C.1.0", "C.1.1", "0.0") and not str(val[0]).isspace() and not str(val[0]) in meter_ids:
+        for key, val in dt.items():
+            if key in ("C.1.0", "C.1.1", "0.0") and not str(val[0]).isspace() and not str(val[0]) in meter_ids:
                 meter_ids.append(str(val[0]))
         meter_ids.sort()
         return mfr_id, "".join(meter_ids)
