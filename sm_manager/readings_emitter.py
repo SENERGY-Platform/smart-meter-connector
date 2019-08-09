@@ -43,7 +43,7 @@ class ReadingsEmitter(Thread):
             try:
                 payload = self.__device.getService(srv)
                 msg.data = json.dumps(payload)
-                envelope = cc_lib.client.message.Envelope(
+                envelope = cc_lib.client.message.EventEnvelope(
                     self.__device,
                     srv,
                     msg
