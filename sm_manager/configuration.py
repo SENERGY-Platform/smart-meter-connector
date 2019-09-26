@@ -18,7 +18,10 @@ __all__ = ('config', )
 
 
 from simple_conf import configuration, section
-from os import getcwd
+from os import getcwd, makedirs
+from os.path import exists as path_exists
+
+user_dir = '{}/storage'.format(getcwd())
 
 
 @configuration
@@ -39,7 +42,10 @@ class SMConf:
         level = "info"
 
 
-config = SMConf('sm.conf', getcwd())
+if not path_exists(user_dir):
+    makedirs(user_dir)
+
+config = SMConf('sm.conf', user_dir)
 
 
 if not all((config.Serial.base_path, )):
