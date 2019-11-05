@@ -24,11 +24,8 @@ import cc_lib
 
 
 class LandisGyrE350(cc_lib.types.Device):
-    uri = config.Senergy.dt_sm
-    description = "Device type for Landis+Gyr E350 Smart Meters."
-    services = {
-        "getMeasurements": GetMeasurements
-    }
+    device_type_id = config.Senergy.dt_sm
+    services = (GetMeasurements, )
 
     def __init__(self, id: str, adapter: None):
         self.id = id
