@@ -30,7 +30,6 @@ class LandisGyrE350(cc_lib.types.Device):
     def __init__(self, id: str, adapter: None):
         self.id = id
         self.name = "Landis+Gyr E350 ({})".format(id)
-        self.addTag("manufacturer", "Landis+Gyr")
         self.adapter = adapter
 
     def getService(self, srv_handler: str):
