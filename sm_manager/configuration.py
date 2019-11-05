@@ -35,7 +35,6 @@ class SMConf:
     @section
     class Senergy:
         dt_sm = None
-        st_sm = None
 
     @section
     class Logger:
@@ -51,5 +50,5 @@ config = SMConf('sm.conf', user_dir)
 if not all((config.Serial.base_path, )):
     exit('Please provide Smart Meter information')
 
-if not all((config.Senergy.dt_sm, config.Senergy.st_sm)):
+if not all((config.Senergy.dt_sm, )):
     exit('Please provide a SENERGY device and service types')
