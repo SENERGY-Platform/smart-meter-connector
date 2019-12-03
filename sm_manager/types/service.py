@@ -18,7 +18,6 @@
 __all__ = ('GetMeasurements', )
 
 
-from ..configuration import config
 from datetime import datetime
 import cc_lib
 
