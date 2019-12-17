@@ -18,15 +18,12 @@
 __all__ = ('GetMeasurements', )
 
 
-from ..configuration import config
 from datetime import datetime
 import cc_lib
 
 
-class GetMeasurements(cc_lib.types.SensorService):
-    uri = config.Senergy.st_sm
-    name = "Push Reading"
-    description = "Push current reading from a smart meter."
+class GetMeasurements(cc_lib.types.Service):
+    local_id = "getMeasurements"
 
     @staticmethod
     def task(source):
