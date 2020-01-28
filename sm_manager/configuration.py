@@ -40,6 +40,10 @@ class SMConf:
     class Logger:
         level = "info"
 
+    @section
+    class RuntimeEnv:
+        max_start_delay = 30
+
 
 if not path_exists(user_dir):
     makedirs(user_dir)
