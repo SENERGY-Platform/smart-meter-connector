@@ -15,12 +15,16 @@
 """
 
 
-from sm_manager import root_logger, DeviceManager, SerialMonitor
-from time import sleep
-import cc_lib
+from sm_manager.configuration import config
+from sm_manager.device_manager import DeviceManager
+from sm_manager.serial_monitor import SerialMonitor
+import time, random, cc_lib
 
 
-logger = root_logger.getChild(__name__)
+if config.RuntimeEnv.max_start_delay > 0:
+    delay = random.randint(1, config.RuntimeEnv.max_start_delay)
+    print("delaying start for {}s".format(delay))
+    time.sleep(delay)
 
 
 device_manager = DeviceManager()
@@ -48,7 +52,7 @@ if __name__ == '__main__':
             connector_client.initHub()
             break
         except cc_lib.client.HubInitializationError:
-            sleep(10)
+            time.sleep(10)
     connector_client.connect(reconnect=True)
     serial_monitor.start()
     serial_monitor.join()
